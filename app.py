@@ -6,6 +6,13 @@ from email.mime.text import MIMEText
 from twilio.rest import Client
 import os
 
+# Debajo de tus otros imports
+from auth_utils import es_admin, obtener_pregunta_seguridad, validar_respuesta_y_cambiar_clave
+
+
+
+
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_secreta_cambiame")
 
@@ -308,6 +315,16 @@ def login():
             return render_template("login.html", error="Email o contraseña incorrectos.")
     return render_template("login.html")
 
+
+@app.route("/admin/dashboard")
+def admin_dashboard():
+    # 1. Le preguntamos al archivo de utilidades
+    if not es_admin(session.get("user_id")):
+        # 2. Si la respuesta es negativa, cortamos el paso
+        return "Acceso denegado. No sos admin, gato.", 403
+        
+    # 3. Si es positiva, mostramos la página del panel
+    return render_template("admin.html")
 
 
 
