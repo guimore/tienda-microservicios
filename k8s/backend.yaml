@@ -15,7 +15,7 @@ spec:
       containers:
       - name: flask-api
         # Reemplazá 'guidomora' por tu usuario real de Docker Hub donde subas la imagen
-        image: guidomora/tienda-backend:latest 
+        image: gmm2/tienda-backend:latest 
         ports:
         - containerPort: 5000
         env:
