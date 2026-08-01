@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USER = 'guimore'
+        DOCKER_HUB_USER = 'gmm2'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
         KALI_IP = '192.168.56.104'
         KALI_USER = 'aguila'
