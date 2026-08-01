@@ -4,8 +4,8 @@ pipeline {
     environment {
         DOCKER_HUB_USER = 'guimore'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        // Le agregamos la ruta de Docker al PATH para esta ejecución
-        PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
+        KALI_IP = '192.168.56.104'
+        SSH_CRED_ID = 'kali-ssh-key'
     }
 
     stages {
@@ -17,27 +17,20 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                script {
-                    echo 'Construyendo imagen del Backend...'
-                    bat "docker build -t %DOCKER_HUB_USER%/tienda-backend:%BUILD_NUMBER% -t %DOCKER_HUB_USER%/tienda-backend:latest ./backend-api"
-
-                    echo 'Construyendo imagen del Frontend...'
-                    bat "docker build -t %DOCKER_HUB_USER%/tienda-frontend:%BUILD_NUMBER% -t %DOCKER_HUB_USER%/tienda-frontend:latest ./frontend"
+                sshagent([SSH_CRED_ID]) {
+                    bat "ssh -o StrictHostKeyChecking=no aguila@%KALI_IP% \"cd ~/tienda-microservicios && git pull origin main && docker build -t %DOCKER_HUB_USER%/tienda-backend:%BUILD_NUMBER% -t %DOCKER_HUB_USER%/tienda-backend:latest ./backend-api\""
+                    bat "ssh -o StrictHostKeyChecking=no aguila@%KALI_IP% \"cd ~/tienda-microservicios && docker build -t %DOCKER_HUB_USER%/tienda-frontend:%BUILD_NUMBER% -t %DOCKER_HUB_USER%/tienda-frontend:latest ./frontend\""
                 }
             }
         }
 
         stage('Push Images to Docker Hub') {
             steps {
-                script {
+                sshagent([SSH_CRED_ID]) {
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
-                        
-                        bat "docker push %DOCKER_HUB_USER%/tienda-backend:%BUILD_NUMBER%"
-                        bat "docker push %DOCKER_HUB_USER%/tienda-backend:latest"
-                        
-                        bat "docker push %DOCKER_HUB_USER%/tienda-frontend:%BUILD_NUMBER%"
-                        bat "docker push %DOCKER_HUB_USER%/tienda-frontend:latest"
+                        bat "ssh -o StrictHostKeyChecking=no aguila@%KALI_IP% \"echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin\""
+                        bat "ssh -o StrictHostKeyChecking=no aguila@%KALI_IP% \"docker push %DOCKER_HUB_USER%/tienda-backend:%BUILD_NUMBER% && docker push %DOCKER_HUB_USER%/tienda-backend:latest\""
+                        bat "ssh -o StrictHostKeyChecking=no aguila@%KALI_IP% \"docker push %DOCKER_HUB_USER%/tienda-frontend:%BUILD_NUMBER% && docker push %DOCKER_HUB_USER%/tienda-frontend:latest\""
                     }
                 }
             }
@@ -45,26 +38,12 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    echo 'Aplicando manifiestos en Kubernetes...'
-                    bat 'kubectl apply -f k8s/'
-                    
-                    bat 'kubectl rollout restart deployment/backend-deployment'
-                    bat 'kubectl rollout restart deployment/frontend-deployment'
+                sshagent([SSH_CRED_ID]) {
+                    bat "ssh -o StrictHostKeyChecking=no aguila@%KALI_IP% \"cd ~/tienda-microservicios && kubectl apply -f k8s/\""
+                    bat "ssh -o StrictHostKeyChecking=no aguila@%KALI_IP% \"kubectl rollout restart deployment/backend-deployment\""
+                    bat "ssh -o StrictHostKeyChecking=no aguila@%KALI_IP% \"kubectl rollout restart deployment/frontend-deployment\""
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            bat 'docker logout || exit 0'
-        }
-        success {
-            echo '¡Despliegue exitoso en Kubernetes!'
-        }
-        failure {
-            echo 'Error en el pipeline de CI/CD.'
         }
     }
 }
