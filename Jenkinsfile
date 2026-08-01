@@ -4,6 +4,8 @@ pipeline {
     environment {
         DOCKER_HUB_USER = 'guimore'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+        // Le agregamos la ruta de Docker al PATH para esta ejecución
+        PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
     }
 
     stages {
