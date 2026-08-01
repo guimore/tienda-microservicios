@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USER = 'guidomora'
+        DOCKER_HUB_USER = 'guimore'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/guidomora/tienda-microservicios.git'
+                git branch: 'main', url: 'https://github.com/guimore/tienda-microservicios.git'
             }
         }
 
@@ -17,10 +17,10 @@ pipeline {
             steps {
                 script {
                     echo 'Construyendo imagen del Backend...'
-                    sh "docker build -t ${DOCKER_HUB_USER}/tienda-backend:${BUILD_NUMBER} -t ${DOCKER_HUB_USER}/tienda-backend:latest ./backend-api"
+                    bat "docker build -t %DOCKER_HUB_USER%/tienda-backend:%BUILD_NUMBER% -t %DOCKER_HUB_USER%/tienda-backend:latest ./backend-api"
 
                     echo 'Construyendo imagen del Frontend...'
-                    sh "docker build -t ${DOCKER_HUB_USER}/tienda-frontend:${BUILD_NUMBER} -t ${DOCKER_HUB_USER}/tienda-frontend:latest ./frontend"
+                    bat "docker build -t %DOCKER_HUB_USER%/tienda-frontend:%BUILD_NUMBER% -t %DOCKER_HUB_USER%/tienda-frontend:latest ./frontend"
                 }
             }
         }
@@ -29,13 +29,13 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
                         
-                        sh "docker push ${DOCKER_HUB_USER}/tienda-backend:${BUILD_NUMBER}"
-                        sh "docker push ${DOCKER_HUB_USER}/tienda-backend:latest"
+                        bat "docker push %DOCKER_HUB_USER%/tienda-backend:%BUILD_NUMBER%"
+                        bat "docker push %DOCKER_HUB_USER%/tienda-backend:latest"
                         
-                        sh "docker push ${DOCKER_HUB_USER}/tienda-frontend:${BUILD_NUMBER}"
-                        sh "docker push ${DOCKER_HUB_USER}/tienda-frontend:latest"
+                        bat "docker push %DOCKER_HUB_USER%/tienda-frontend:%BUILD_NUMBER%"
+                        bat "docker push %DOCKER_HUB_USER%/tienda-frontend:latest"
                     }
                 }
             }
@@ -45,10 +45,10 @@ pipeline {
             steps {
                 script {
                     echo 'Aplicando manifiestos en Kubernetes...'
-                    sh 'kubectl apply -f k8s/'
+                    bat 'kubectl apply -f k8s/'
                     
-                    sh 'kubectl rollout restart deployment/backend-deployment'
-                    sh 'kubectl rollout restart deployment/frontend-deployment'
+                    bat 'kubectl rollout restart deployment/backend-deployment'
+                    bat 'kubectl rollout restart deployment/frontend-deployment'
                 }
             }
         }
@@ -56,7 +56,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker logout || true'
+            bat 'docker logout || exit 0'
         }
         success {
             echo '¡Despliegue exitoso en Kubernetes!'
