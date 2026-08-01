@@ -15,7 +15,7 @@ spec:
       containers:
       - name: nginx-web
         # Reemplazá 'guidomora' por tu usuario real de Docker Hub
-        image: guidomora/tienda-frontend:latest 
+        image: gmm2/tienda-frontend:latest 
         ports:
         - containerPort: 80
 ---
@@ -31,4 +31,4 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 80
-    nodePort: 30080 # Accedés desde tu PC con http://<IP-DE-TU-NODO-K8S>:30080
+    nodePort: 30081 # Accedés desde tu PC con http://<IP-DE-TU-NODO-K8S>:30080
