@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - MiTienda</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <header>
+      <nav class="nav-principal">
+          <a href="/" class="logo">MiTienda</a>
+          <div class="nav-links">
+              <a href="/">Catálogo</a>
+              <a href="/templates/carrito.html">Carrito</a>
+              <a href="/templates/login.html">Ingresar</a>
+          </div>
+      </nav>
+  </header>
+
+  <main class="contenedor">
+      <form id="form-login" class="form-checkout">
+          <h2>Iniciar sesión</h2>
+          <div id="mensaje-error" class="error" style="display: none;"></div>
+
+          <div class="campo">
+              <label for="email">Email</label>
+              <input type="email" id="email" required>
+          </div>
+          <div class="campo">
+              <label for="password">Contraseña</label>
+              <input type="password" id="password" required>
+          </div>
+          <button type="submit" class="btn btn-primario">Entrar</button>
+          
+          <p style="margin-top: 1rem; text-align: center;">
+              ¿No tenés cuenta? <a href="/templates/registro.html" style="text-decoration: underline;">Registrate acá</a>
+          </p>
+      </form>
+  </main>
+
+  <footer>
+      <p>&copy; 2026 MiTienda - Todos los derechos reservados.</p>
+  </footer>
+
+  <script>
+    document.getElementById("form-login").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errorDiv = document.getElementById("mensaje-error");
+        errorDiv.style.display = "none";
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            // Llamamos al endpoint /api/login de tu app.py
+            const respuesta = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const resultado = await respuesta.json();
+
+            if (respuesta.ok) {
+                alert(`¡Bienvenido ${resultado.usuario}!`);
+                window.location.href = '/'; // Redirigimos al catálogo
+            } else {
+                errorDiv.textContent = resultado.error || "Error al iniciar sesión.";
+                errorDiv.style.display = "block";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            errorDiv.textContent = "Error de conexión con el servidor.";
+            errorDiv.style.display = "block";
+        }
+    });
+  </script>
+</body>
+</html>

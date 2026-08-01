@@ -1,6 +1,8 @@
 # 🛒 Tienda Virtual - Enterprise Infrastructure & Production Deployment
 
-Aplicación web de comercio electrónico basada en **Flask**, rediseñada y optimizada bajo prácticas de **DevOps y System Administration** para garantizar despliegues automatizados, persistencia de datos y alta disponibilidad mediante contenedores.
+Aplicación web de comercio electrónico basada en **Flask**, rediseñada y optimizada bajo prácticas 
+de **DevOps y System Administration** para garantizar despliegues automatizados, persistencia de 
+datos y alta disponibilidad mediante contenedores.
 
 ---
 

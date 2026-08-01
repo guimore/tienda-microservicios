@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - MiTienda</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <header>
+      <nav class="nav-principal">
+          <a href="/" class="logo">MiTienda</a>
+          <div class="nav-links">
+              <a href="/">Catálogo</a>
+              <a href="/templates/carrito.html">Carrito</a>
+              <a href="/templates/login.html">Ingresar</a>
+          </div>
+      </nav>
+  </header>
+
+  <main class="contenedor">
+      <form id="form-checkout" class="form-checkout">
+          <h2>Finalizar compra</h2>
+          <div id="mensaje-error" class="error" style="display: none;"></div>
+
+          <div class="campo">
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" required>
+          </div>
+          <div class="campo">
+              <label for="email">Email</label>
+              <input type="email" id="email" required>
+          </div>
+          
+          <p class="total-carrito">Total a pagar: <span id="monto-total">$0.00</span></p>
+          <button type="submit" class="btn btn-primario">Confirmar pedido</button>
+      </form>
+
+      <!-- Bloque de confirmación que arranca oculto -->
+      <div id="bloque-confirmacion" class="confirmacion" style="display: none;">
+          <h2 id="confirmacion-titulo"></h2>
+          <p id="confirmacion-pedido"></p>
+          <p>Te enviamos la confirmación del pedido.</p>
+          <br>
+          <a href="/" class="btn btn-primary">Volver al catálogo</a>
+      </div>
+  </main>
+
+  <footer>
+      <p>&copy; 2026 MiTienda - Todos los derechos reservados.</p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        // 1. Obtenemos el total actual del carrito desde la API
+        try {
+            const resp = await fetch('/api/carrito');
+            const data = await resp.json();
+            
+            if (!data.items || data.items.length === 0) {
+                alert("Tu carrito está vacío, gato.");
+                window.location.href = '/';
+                return;
+            }
+            
+            document.getElementById("monto-total").textContent = `$${data.total.toFixed(2)}`;
+        } catch (error) {
+            console.error("Error consultando el carrito:", error);
+        }
+    });
+
+    // 2. Procesamos la compra mediante la API /api/checkout
+    document.getElementById("form-checkout").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errorDiv = document.getElementById("mensaje-error");
+        errorDiv.style.display = "none";
+
+        const nombre = document.getElementById("nombre").value;
+        const email = document.getElementById("email").value;
+
+        try {
+            const respuesta = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, email })
+            });
+
+            const resultado = await respuesta.json();
+
+            if (respuesta.ok && resultado.confirmado) {
+                // Ocultamos el formulario y mostramos la confirmación
+                document.getElementById("form-checkout").style.display = "none";
+                
+                document.getElementById("confirmacion-titulo").textContent = `¡Gracias por tu compra, ${resultado.nombre}!`;
+                document.getElementById("confirmacion-pedido").textContent = `Tu pedido #${resultado.pedido_id} por $${resultado.total} fue registrado correctamente.`;
+                
+                document.getElementById("bloque-confirmacion").style.display = "block";
+            } else {
+                errorDiv.textContent = resultado.error || "No se pudo procesar la compra.";
+                errorDiv.style.display = "block";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            errorDiv.textContent = "Error al conectar con el servidor.";
+            errorDiv.style.display = "block";
+        }
+    });
+  </script>
+</body>
+</html>

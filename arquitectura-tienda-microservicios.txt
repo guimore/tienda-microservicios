@@ -1,0 +1,37 @@
+[ Navegador del Cliente (Tu PC / Celular) ]
+                     │ (Accede por el puerto 30080)
+                     ▼
+       ┌───────────────────────────┐
+       │      tienda-frontend      │  <-- Microservicio 1: Nginx (Sirve HTML/CSS/JS)
+       └─────────────┬─────────────┘
+                     │ (Llamadas AJAX / fetch a la API)
+                     ▼
+       ┌───────────────────────────┐
+       │      tienda-backend       │  <-- Microservicio 2: Flask (Solo procesa datos JSON)
+       └─────────────┬─────────────┘
+                     │ (Conexión de Base de Datos MySQL)
+                     ▼
+       ┌───────────────────────────┐
+       │         tienda-db         │  <-- Microservicio 3: Base de datos con persistencia
+       └───────────────────────────┘
+	   
+	   ###################################################
+tienda-microservicios/
+│
+├── 📂 backend-api/             ← "El Cerebro" (Microservicio 2: Flask API)
+│   ├── app.py                  # MODIFICADO: Devuelve solo JSON (ej. jsonify(productos))
+│   ├── requirements.txt        # Las dependencias de Python
+│   ├── Dockerfile              # El Dockerfile optimizado que vimos antes
+│   └── 📂 models/
+│       └── db.py               # MODIFICADO: Conexión dinámica a la base de datos externa
+│
+├── 📂 frontend/                ← "La Cara" (Microservicio 1: Nginx + Static Web)
+│   ├── Dockerfile              # Dockerfile para levantar Nginx
+│   ├── nginx.conf              # Configuración para servir la web y redirigir /api al backend
+│   ├── 📂 templates/           # MODIFICADO: HTMLs estáticos consumiendo datos con JS
+│   └── 📂 static/              # MODIFICADO: JS modificado para usar fetch() a la API
+│
+└── 📂 k8s/                     ← "La Infraestructura" (Tus recetas de Kubernetes)
+    ├── db-deployment.yaml      # Despliegue de MySQL con volumen persistente
+    ├── backend-deployment.yaml # Despliegue de tu Flask API
+    └── frontend-deployment.yaml# Despliegue de tu Nginx con NodePort para ver tu web

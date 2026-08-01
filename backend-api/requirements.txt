@@ -5,3 +5,9 @@ flask
 werkzeug
 twilio
 gunicorn
+
+flask
+pymysql
+cryptography
+werkzeug
+twilio

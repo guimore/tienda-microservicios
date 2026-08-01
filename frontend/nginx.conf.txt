@@ -1,0 +1,37 @@
+server {
+    listen 80;                 # 1. Nginx escucha en el puerto 80 dentro de su contenedor
+    server_name localhost;
+
+    # ────────────────────────────────────────────────────────
+    # SECCIÓN 1: Servir el diseño (HTML, CSS, JS, Imágenes)
+    # ────────────────────────────────────────────────────────
+
+    # Cuando el usuario entra a la raíz de tu web (ej: http://tu-tienda.com/)
+    location / {
+        root /usr/share/nginx/html/templates; # Va a buscar tus HTMLs a esta carpeta
+        index index.html;                     # El archivo por defecto que muestra es index.html
+        try_files $uri $uri/ /index.html;     # Si el usuario refresca la página, no da error 404
+    }
+
+    # Cuando el navegador pide estilos, imágenes o scripts (ej: /static/css/style.css)
+    location /static/ {
+        alias /usr/share/nginx/html/static/;  # Nginx los busca directamente en el disco duro
+    }
+
+    # ────────────────────────────────────────────────────────
+    # SECCIÓN 2: El "Túnel" hacia el Backend de Flask (Proxy Reverso)
+    # ────────────────────────────────────────────────────────
+
+    # Cuando el JavaScript del navegador hace un fetch('/api/productos')
+    location /api/ {
+        # ¡Acá está la magia de Kubernetes! 
+        # Redirige la petición internamente al servicio 'backend-service' en el puerto 5000
+        proxy_pass http://backend-service:5000; 
+
+        # Estas líneas le pasan a Flask la IP real del cliente (para que Flask sepa quién le habla)
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

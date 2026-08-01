@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2 # Levantamos 2 réplicas de Flask por si una se cae (alta disponibilidad)
+  selector:
+    matchLabels:
+      app: tienda-backend
+  template:
+    metadata:
+      labels:
+        app: tienda-backend
+    spec:
+      containers:
+      - name: flask-api
+        # Reemplazá 'guidomora' por tu usuario real de Docker Hub donde subas la imagen
+        image: guidomora/tienda-backend:latest 
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DB_HOST
+          value: "db-service" # El DNS interno de Kubernetes que apunta a MySQL
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          value: "peronperon"
+        - name: DB_NAME
+          value: "tienda_db"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: tienda-backend
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000

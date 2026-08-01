@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu Carrito - MiTienda</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <header>
+      <nav class="nav-principal">
+          <a href="/" class="logo">MiTienda</a>
+          <div class="nav-links">
+              <a href="/">Catálogo</a>
+              <a href="/templates/carrito.html">Carrito</a>
+              <a href="/templates/login.html">Ingresar</a>
+          </div>
+      </nav>
+  </header>
+
+  <main class="contenedor">
+      <h1>Tu Carrito de Compras</h1>
+
+      <div id="carrito-contenedor">
+          <!-- Se cargará dinámicamente con JS -->
+      </div>
+  </main>
+
+  <footer>
+      <p>&copy; 2026 MiTienda - Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="/static/js/carrito.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const contenedor = document.getElementById("carrito-contenedor");
+
+        try {
+            const respuesta = await fetch('/api/carrito');
+            const datos = await respuesta.json();
+
+            if (!datos.items || datos.items.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="carrito-vacio">
+                        <p>Tu carrito está vacío, gato.</p>
+                        <a href="/" class="btn btn-primary">Ir a ver productos</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // Dibujar la tabla de ítems y el total
+            contenedor.innerHTML = `
+                <table class="tabla-carrito">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${datos.items.map(item => `
+                            <tr>
+                                <td>${item.nombre}</td>
+                                <td>$${item.precio}</td>
+                                <td>${item.cantidad}</td>
+                                <td>$${item.subtotal}</td>
+                                <td>
+                                    <!-- Botón para quitar un item -->
+                                    <button onclick="quitarDelCarrito(${item.id})" class="btn btn-danger btn-sm">Quitar</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="carrito-resumen">
+                    <h3>Total a pagar: <span class="total-monto">$${datos.total}</span></h3>
+                    <div class="acciones-resumen">
+                        <!-- El botón de vaciar utiliza el id 'btn-secundario' para que tu listener de carrito.js lo valide -->
+                        <a href="#" id="vaciar-btn" class="btn btn-secundario">Vaciar Carrito</a>
+                        <a href="/templates/checkout.html" class="btn btn-primary">Iniciar Compra</a>
+                    </div>
+                </div>
+            `;
+
+            // Enlazamos manualmente el botón de vaciar ya que se creó dinámicamente
+            const vaciarBtn = document.getElementById("vaciar-btn");
+            if (vaciarBtn) {
+                vaciarBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    if (confirm("¿Seguro que querés vaciar el carrito, gato?")) {
+                        vaciarCarritoAPI();
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error(error);
+            contenedor.innerHTML = "<p>Error al obtener el carrito.</p>";
+        }
+    });
+  </script>
+</body>
+</html>
